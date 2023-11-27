@@ -1,0 +1,37 @@
+#!/bin/bash
+#============================================================================
+# Title       : sysstat_pgio
+# Description : Simple sysstats collector for pypgio
+# Author      : Bart Sjerps <bart@dirty-cache.com>
+# License     : GPLv3+
+# ---------------------------------------------------------------------------
+
+# usage: sysstat_pgio user@remotehost interval count
+# example: sysstat_pgio root@postgres.lan 3 10
+
+PATH=/usr/bin:/usr/sbin
+
+# Setup temp working directory - clean it up when program ends
+readonly WORKDIR=$(/bin/mktemp --tmpdir -d)
+cleanup() { /bin/rm -rf ${WORKDIR:-/none} ; }
+trap "cleanup" INT TERM HUP EXIT
+
+remote=${1:-localhost} ; shift
+interval=${1:-1} ; shift
+count=${1:-10} ; shift
+
+timestamp=$(date -u +"%Y%m%d") #_%H%M")
+
+echo "$(date -u +"%Y-%m-%d %H:%M:%S")  Running sysstats for $remote interval=$interval count=$count"
+
+ssh -T "$remote" cat /proc/diskstats > $WORKDIR/pgio_diskstats_before
+ssh -T "$remote" iostat -xm '$(lsblk -ndo kname)' $interval $count > $WORKDIR/pgio_iostat.out &
+ssh -T "$remote" vmstat $interval $count > $WORKDIR/pgio_vmstat.out &
+ssh -T "$remote" mpstat -P ALL $interval $count > $WORKDIR/pgio_mpstat.out &
+
+wait
+
+ssh -T "$remote" 'cat /proc/diskstats' > $WORKDIR/pgio_diskstats_after
+
+find $WORKDIR -type f -printf "%f\n" | tar zcf /tmp/pgiostats-$timestamp.tgz -C $WORKDIR --files-from -
+tar tvf /tmp/pgiostats-$timestamp.tgz

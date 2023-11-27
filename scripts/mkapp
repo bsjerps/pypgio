@@ -1,0 +1,33 @@
+#!/bin/bash
+#============================================================================
+# Title       : mkapp
+# Description : Creates pygpio ZIPAPP package
+# Author      : Bart Sjerps <bart@dirty-cache.com>
+# License     : GPLv3+
+# ---------------------------------------------------------------------------
+
+set -e
+export gitdir=$(git rev-parse --show-toplevel) || exit 10
+export packager=$(git config --global user.name)
+export email=$(git config --global user.email | sed 's/@/ AT /')
+
+die() { echo "$(basename $0) error: $@" >&2 ; exit 20 ; }
+
+cat << EOF > "$gitdir"/src/buildinfo.py
+buildinfo = {
+    'builddate': '$(date +"%Y-%m-%d %H:%M")',
+    'branch': '$(git branch --show-current)',
+    'tag': '$(git describe --abbrev=0)',
+    'describe': '$(git describe --dirty)',
+    'packager': '$packager <$email>',
+    'buildhash': '$(git rev-parse --verify HEAD)',
+    'shorthash': '$(git rev-parse --short HEAD)'
+}
+EOF
+
+python3 -m zipapp \
+	--python "/usr/bin/env python3" \
+	--main pgio:main \
+	--output "$HOME/bin/pgio" \
+    $gitdir/src
+    
