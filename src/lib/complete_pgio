@@ -1,0 +1,45 @@
+#!/bin/bash
+#============================================================================
+# Title       : complete_pgio
+# Description : bash_completion file for pypgio
+# Author      : Bart Sjerps <bart@dirty-cache.com>
+# License     : GPLv3+
+# ---------------------------------------------------------------------------
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License at <http://www.gnu.org/licenses/> for
+# more details.
+# ---------------------------------------------------------------------------
+# This file must be used with "source complete_pgio" *from bash*
+# you cannot run it directly
+    
+_pgio() {
+  local cur prev opts cmd configure
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  cmd="${COMP_WORDS[1]}"
+  opts="destroy configure setup run list report"
+  configure="--defaults --dbhost --dbname --dbuser --dbpass --dbport --update_pct --scale --schemas --work_unit --update_unit --tablespace --remote"
+  if (( $COMP_CWORD == 1 )); then
+    COMPREPLY=($(compgen -W "-h --version --tabs -nohead --debug $opts" -- ${cur}))
+  fi
+  if (( $COMP_CWORD > 1 )); then
+    prev2="${COMP_WORDS[COMP_CWORD-2]}"
+    case "$prev" in
+      --tabs|-t|--nohead|-n|--debug|-D) COMPREPLY=($(compgen -W "-h --version --tabs -nohead --debug $opts" -- ${cur}));;
+      configure) COMPREPLY=($(compgen -W "${configure}" -- ${cur})) ;;
+    esac
+    case "$cmd$prev2" in
+      configure--*) COMPREPLY=($(compgen -W "${configure}" -- ${cur})) ;;
+    esac
+  fi
+}
+
+complete -F _pgio pgio

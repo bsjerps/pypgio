@@ -1,0 +1,7 @@
+pgio_get_rand.sql and pgio.sql are the basis for PyPGIO,
+and licensed under the APACHE 2.0 license:
+http://www.apache.org/licenses/LICENSE-2.0
+
+For the original (shell script) version, see
+
+https://github.com/therealkevinc/pgio
