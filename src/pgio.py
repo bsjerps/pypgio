@@ -228,7 +228,6 @@ def main():
     parser_config.add_argument('--dbuser',     metavar='user',        help='Database user')
     parser_config.add_argument('--dbpass',     metavar='password',    help='Database password')
     parser_config.add_argument('--dbport',     metavar='port',        help='Database port', type=int)
-    parser_config.add_argument('--remote',     metavar='user@host',   help='Remote SSH destination')
     parser_config.add_argument('--update_pct', metavar='pct',         help='Update percentage', type=int)
     parser_config.add_argument('--scale',      metavar="<size>M|G|T", help="Schema size")
     parser_config.add_argument('--schemas',    metavar="n", type=int, help="Number of user schemas")

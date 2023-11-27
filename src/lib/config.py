@@ -73,7 +73,7 @@ class Config():
             raise KeyError(f'Invalid parameter {name}')
 
     def reset(self):
-        info = {k: self.parameters[k] for k in self.parameters if not k in ('dbhost','dbname','dbuser','dbpass','remote')}
+        info = {k: self.parameters[k] for k in self.parameters if not k in ('dbhost','dbname','dbuser','dbpass')}
         self.info.update(info)
         self.dirty=True
 
