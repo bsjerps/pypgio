@@ -10,7 +10,7 @@ It is based on, and uses some code from PGIO by Kevin Closson, see [PGIO](https:
 # Prerequisites
 
 * Linux shell account (can be different system than the database server)
-* PostgreSQL database
+* PostgreSQL database (any recent supported version)
 * User on the database with full access rights on the database
 * Python 3.6 or higher
 * _python3_ must be in the environment
@@ -47,6 +47,9 @@ scripts/mkapp
 ls -al ~/bin/pgio
 
 ```
+
+# Create database
+See [create_db.sql](https://github.com/bsjerps/pypgio/blob/devel/scripts/create_db.sql) for details
 
 # Setup the environment
 
@@ -123,7 +126,7 @@ pgio report -v
 
 ```
 # Delete the database structures
-pgio destroy 
+pgio destroy
 
 # Simply remove the _pgio_ files from $HOME/bin:
 rm -f $HOME/bin/{pgio,complete_pgio,install_pgio}
