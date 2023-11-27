@@ -1,0 +1,12 @@
+#!/bin/bash
+#============================================================================
+# Title       : download
+# Description : Downloads the latest pygpio from git releases to $HOME/bin
+# Author      : Bart Sjerps <bart@dirty-cache.com>
+# License     : GPLv3+
+# ---------------------------------------------------------------------------
+
+url=$(curl -s https://api.github.com/repos/bsjerps/pypgio/releases/latest | awk '/browser_download_url/ {print $NF}' | tr -d \")
+
+wget -q $url -O ~/bin/pgio
+chmod 755 ~/bin/pgio
