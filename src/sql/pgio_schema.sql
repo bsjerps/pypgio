@@ -7,6 +7,8 @@
 
 CREATE TABLE IF NOT EXISTS pgio_table_stats(mypid INT PRIMARY KEY
 , table_name           TEXT NOT NULL
+, ts_start             TIMESTAMP NOT NULL
+, ts_end               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 , work_unit            INTEGER NOT NULL
 , update_unit          INTEGER NOT NULL
 , loop_iterations      BIGINT NOT NULL
@@ -16,8 +18,6 @@ CREATE TABLE IF NOT EXISTS pgio_table_stats(mypid INT PRIMARY KEY
 , sql_update_max_tm    NUMERIC NOT NULL
 , select_blk_touch_cnt BIGINT NOT NULL
 , update_blk_touch_cnt BIGINT NOT NULL
-, ts_start             TIMESTAMP NOT NULL
-, ts_end               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS pgio_dbstats(id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY

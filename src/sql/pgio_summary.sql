@@ -5,12 +5,33 @@
 -- License     : GPLv3+
 -----------------------------------------------------------------------------
 
-SELECT count(*)             threads
-, sum(loop_iterations)      loops
-, sum(sql_selects)          selects
-, sum(sql_updates)          updates
-, max(sql_select_max_tm)    max_select
-, max(sql_update_max_tm)    max_update
-, sum(select_blk_touch_cnt) blocks_selected
-, sum(update_blk_touch_cnt) blocks_updated
-FROM pgio_table_stats
+SELECT 'Total' pid
+, tables
+, runtime
+, work_unit || ':' || update_unit  "units"
+, loops
+, selects
+, updates
+, round(max_select,4)          "max_select"
+, round(max_update,4)          "max_update"
+, blks_selected
+, blks_updated
+, round(blks_selected/runtime) "read/s"
+, round(blks_updated/runtime)  "write/s"
+FROM (
+	SELECT COUNT(*)             threads
+	, count(table_name)         tables
+    , ROUND(extract(epoch FROM MAX(ts_end) - MIN(ts_start)),2) runtime
+	, MAX(work_unit)            work_unit
+	, MAX(update_unit)          update_unit
+	, SUM(loop_iterations)      loops
+	, SUM(sql_selects)          selects
+	, SUM(sql_updates)          updates
+	, MAX(sql_select_max_tm)    max_select
+	, MAX(sql_update_max_tm)    max_update
+	, SUM(select_blk_touch_cnt) blks_selected
+	, SUM(update_blk_touch_cnt) blks_updated
+	, TO_CHAR(MIN(ts_start), 'HH24:MI:SS')            ts_start
+	, TO_CHAR(MAX(ts_end), 'HH24:MI:SS')              ts_end
+	FROM pgio_table_stats
+)

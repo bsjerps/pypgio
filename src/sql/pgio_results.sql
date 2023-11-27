@@ -8,8 +8,7 @@
 SELECT pid
 , table_name       "table"
 , round(runtime,2) "runtime"
-, work_unit
-, update_unit
+, work_unit || ':' || update_unit  "units"
 , loops
 , selects
 , updates
@@ -17,12 +16,12 @@ SELECT pid
 , round(max_update,4)              "max_update"
 , blocks_selected                  "blks_selected"
 , blocks_updated                   "blks_updated"
-, round(blocks_selected/runtime,2) "blks_sel/s"
-, round(blocks_updated/runtime,2)  "blks_upd/s"
+, round(blocks_selected/runtime) "read/s"
+, round(blocks_updated/runtime)  "write/s"
 FROM (
 	SELECT mypid pid
 	, table_name            
-	, extract(seconds FROM ts_end - ts_start) runtime
+	, extract(epoch FROM ts_end - ts_start) runtime
 	, work_unit             
 	, update_unit
 	, loop_iterations       loops
@@ -33,5 +32,5 @@ FROM (
 	, select_blk_touch_cnt  blocks_selected
 	, update_blk_touch_cnt  blocks_updated
 	FROM pgio_table_stats
+	ORDER BY pid
 )
-ORDER BY pid

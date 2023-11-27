@@ -30,7 +30,7 @@ if not sys.prefix != sys.base_prefix:
 
 try:
     from psycopg import OperationalError, DatabaseError
-    from lib.pretty import pretty
+    from lib.pretty import Pretty
 except ImportError as e:
     print(f'# Import failed: {e.name}')
     print(f'# Please install {e.name}:')
@@ -142,14 +142,19 @@ def setup(args, config):
 def report(args, config):
     db = Database(config)
     if args.verbose:
-        head, data = db.report('pgio_details.sql')
-        pretty(args, head, data, 'Results per thread')
+        head, data = db.report('pgio_results.sql')
+        t = Pretty(head, 'Results')
+        t.rows(data)
+        t.linebreak()
 
         head, data = db.report('pgio_summary.sql')
-        pretty(args, head, data, 'Summary')
+        t.data.append(data[-1])
+        t.print(args)
 
     head, data = db.report('pgio_dbstats.sql')
-    pretty(args, head, data, 'Database I/O stats')
+    t = Pretty(head, 'Database I/O stats')
+    t.rows(data)
+    t.print(args)
 
 def runit(args, config):
     db = Database(config)
@@ -162,7 +167,7 @@ def runit(args, config):
     # Do not use more schemas than available
     schemas = min(config.schemas, db.schemas)
     if args.threads > schemas:
-        raise ValueError(f"Cannot use more threads than schemas")
+        raise ValueError(f"Cannot use more threads than schemas (unsupported)")
 
     logging.info(f"Date:           {t_start.strftime('%Y-%m-%d %H:%M:%S')}")
     logging.info(f"Server:         {db.conn.info.host}")
@@ -174,7 +179,7 @@ def runit(args, config):
     logging.info(f"Work_unit:      {config.work_unit}")
     logging.info(f"Update_unit:    {config.update_unit}")
 
-    logging.info(f"Testing {schemas} schemas with {args.threads} thread(s) accessing {config.size} ({config.scale} blocks) of each schema.")
+    logging.info(f"Testing {args.threads} thread(s) accessing {config.size} ({config.scale} blocks) of each schema.")
     logging.info(f"Launching sessions. {config.schemas} schema(s) will be accessed by {args.threads} thread(s) total")
 
     threads = []
