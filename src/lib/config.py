@@ -6,6 +6,23 @@ License: GPLv3+
 
 import os, json
 
+versioninfo = {
+    'author': "Bart Sjerps <info@dirty-cache.com>",
+    'copyright': "Copyright 2023, Bart Sjerps",
+    'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html and Apache 2.0, http://www.apache.org/licenses/LICENSE-2.0",
+    'version': "1.0.2"
+}
+
+def printversion():
+    print (f"Author:    {versioninfo['author']}")
+    print (f"Copyright: {versioninfo['copyright']}")
+    print (f"License:   {versioninfo['license']}")
+    print (f"Version:   {versioninfo['version']}")
+
+def printdetailedversion():
+    print ("Builddate: {buildinfo['builddate']}")
+    print ("Buildhash: {buildinfo['buildhash']}")
+
 def _scale2rows(scale):
     suffix=scale[-1].lower()
     if suffix == 'm':

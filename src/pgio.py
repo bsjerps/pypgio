@@ -15,7 +15,7 @@ from datetime import datetime
 from threading import Thread, Event
 from queue import Queue
 
-from lib.pgio_functions import install, printversion
+from lib.pgio_functions import install
 
 # Prompt user to install or activate when needed
 if not sys.prefix != sys.base_prefix:
@@ -38,7 +38,7 @@ except ImportError as e:
     sys.exit(20)
 
 from lib.database import Database
-from lib.config import Config
+from lib.config import Config, printversion
 
 logging.basicConfig(level=logging.INFO,
     format="%(levelname)-8s: %(message)s",

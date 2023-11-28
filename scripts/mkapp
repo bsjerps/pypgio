@@ -30,4 +30,3 @@ python3 -m zipapp \
 	--main pgio:main \
 	--output "$HOME/bin/pgio" \
     $gitdir/src
-    
