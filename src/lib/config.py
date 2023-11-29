@@ -10,7 +10,7 @@ versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'copyright': "Copyright 2023, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html and Apache 2.0, http://www.apache.org/licenses/LICENSE-2.0",
-    'version': "1.0.2"
+    'version': "1.0.3"
 }
 
 def printversion():
@@ -62,7 +62,7 @@ class Config():
 
     def __init__(self):
         self.info  = {}
-        self.path  = os.path.join(os.path.expanduser('~'), 'pgio.json')
+        self.path  = os.path.join(os.path.expanduser('~'), '.config/pgio', 'pgio.json')
         self.dirty = False
         self.load()
 
@@ -125,6 +125,7 @@ class Config():
             raise ValueError(f'{self.path}: Bad JSON format')
 
     def save(self):
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
         with open(self.path, 'w') as f:
             json.dump(self.info, f, indent=2, sort_keys=True)
 

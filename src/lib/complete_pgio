@@ -25,7 +25,7 @@ _pgio() {
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
   cmd="${COMP_WORDS[1]}"
-  opts="destroy configure setup run list report"
+  opts="destroy configure setup run list report install uninstall"
   configure="--defaults --dbhost --dbname --dbuser --dbpass --dbport --update_pct --scale --schemas --work_unit --update_unit --tablespace --remote"
   if (( $COMP_CWORD == 1 )); then
     COMPREPLY=($(compgen -W "-h --version --tabs -nohead --debug $opts" -- ${cur}))

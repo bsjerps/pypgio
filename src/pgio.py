@@ -6,48 +6,47 @@ Based on the original PGIO by Kevin Closson - see https://github.com/therealkevi
 License: GPLv3+
 """
 
-import sys
+import os, sys
 sys.dont_write_bytecode = True
 
+sys.path.append(os.path.join(os.path.expanduser('~'), 
+        'pgio_venv/lib',
+        f'python3.{sys.version_info.minor}',
+        'site-packages'))
+
 import os, argparse, logging
-from time import sleep
 from datetime import datetime
 from threading import Thread, Event
 from queue import Queue
-
-from lib.pgio_functions import install
-
-# Prompt user to install or activate when needed
-if not sys.prefix != sys.base_prefix:
-    homedir = os.path.expanduser('~')
-    envdir  = os.path.join(homedir, 'pgio_venv')
-    if not os.path.isdir(envdir):
-        install()
-        print("# First run pgio installer:\n\nbash install_pgio\n")
-    else:
-        print("# Please activate the virtual environment:\n\nsource ~/pgio_venv/bin/activate\nsource ~/pgio_venv/bin/complete_pgio\n")
-    sys.exit(1)
-
-try:
-    from psycopg import OperationalError, DatabaseError
-    from lib.pretty import Pretty
-except ImportError as e:
-    print(f'# Import failed: {e.name}')
-    print(f'# Please install {e.name}:')
-    print(f'pip install {e.name}')
-    sys.exit(20)
-
-from lib.database import Database
-from lib.config import Config, printversion
+from lib.installer import install, uninstall
 
 logging.basicConfig(level=logging.INFO,
     format="%(levelname)-8s: %(message)s",
     datefmt='%Y-%m-%d %H:%M:%S')
 
-def nt2str(nt):
-    """Named tuple to printable string"""
-    words = [f"{k}={str(getattr(nt, k))}" for k in nt._fields]
-    return ' '.join(words)
+try:
+    from psycopg import OperationalError, DatabaseError
+    from lib.pretty import Pretty
+    from lib.database import Database
+    from lib.config import Config, printversion
+except ImportError:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--install', action="store_true")
+    parser.add_argument('-u', '--uninstall', action="store_true")
+
+    args = parser.parse_args()
+    if args.install:
+        install()
+    elif args.uninstall:
+        uninstall()
+    else:
+        print('Missing environment, try pgio --install')
+
+    sys.exit()
+
+logging.basicConfig(level=logging.INFO,
+    format="%(levelname)-8s: %(message)s",
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 def destroy(args, config):
     """Delete all pgio related stuff from the database"""
@@ -64,7 +63,9 @@ def configure(args, config):
 def tablesizes(args, config):
     db = Database(config)
     head, data = db.report('pgio_tablesize.sql')
-    pretty(args, head, data)
+    pretty = Pretty(head)
+    pretty.rows(data)
+    pretty.print(args)
 
 def create_thread(n, args, config, queue):
     """Thread for creating and loading a data table"""
@@ -210,6 +211,8 @@ def main():
     parser.add_argument('-V', '--version', help="Show version and copyright", action="store_true")
 
     subparsers      = parser.add_subparsers(title='commands', dest='cmd')
+    parser_install  = subparsers.add_parser('install',   help='(Re-)Install virtual environment', add_help=False)
+    parser_uninst   = subparsers.add_parser('uninstall', help='Remove virtual environment')
     parser_destroy  = subparsers.add_parser('destroy',   help='Destroy PGIO data/config')
     parser_config   = subparsers.add_parser('configure', formatter_class=formatter, help='Configure settings')
     parser_setup    = subparsers.add_parser('setup',     help='Setup tables')
@@ -218,6 +221,8 @@ def main():
     parser_report   = subparsers.add_parser('report',    help='Report')
     parser_abort    = subparsers.add_parser('abort',     help='Cancel running jobs')
 
+    parser_install.set_defaults(func=install)
+    parser_uninst.set_defaults(func=uninstall)
     parser_destroy.set_defaults(func=destroy)
     parser_config.set_defaults(func=configure)
     parser_setup.set_defaults(func=setup)
