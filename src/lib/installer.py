@@ -6,7 +6,7 @@ License: GPLv3+
 """
 
 import os, re, argparse
-from subprocess import run, PIPE
+from subprocess import run, PIPE, CalledProcessError
 from pkgutil import get_data
 
 homedir     = os.path.expanduser('~')
@@ -37,23 +37,36 @@ def makefiles():
             f.write(f"source {complete}\n")
 
 def virtualenv():
-    pip      = os.path.join(venvdir, 'bin', 'pip')
+    pip = os.path.join(venvdir, 'bin', 'pip')
 
     # Create venv
     if not os.path.isdir(venvdir):
-        run(['python3', '-m', 'venv', venvdir])
-        run([pip, 'install', '--upgrade', 'pip'])
+        try:
+            run(['python3', '-m', 'venv', venvdir], check=True)
+        except CalledProcessError:
+            run(['/usr/bin/rm', '-rf', venvdir])
+            print(f'Creating virtual environment failed, try "sudo apt-get install python3-venv"')
+            return
+    try:
+        run([pip, 'install', '--upgrade', 'pip'], check=True)
+    except (CalledProcessError, FileNotFoundError):
+        print("Install PIP packages failed")
+        run(['/usr/bin/rm', '-rf', venvdir])
     
     # Install required packages
-    r = run([pip, 'freeze'], stdout=PIPE, encoding='utf-8')
+    r = run([pip, 'freeze'], stdout=PIPE, encoding='utf-8', check=True)
     installed = re.findall('(\S+)==.*', r.stdout)
     for pkg in required:
         if not pkg in installed:
-            run([pip, 'install', pkg])
+            run([pip, 'install', pkg], check=True)
 
 def install(*args, **kwargs):
-    makefiles()
-    virtualenv()
+    try:
+        makefiles()
+        virtualenv()
+        print("Now logout and login again to activate pgio bash completion")
+    except (CalledProcessError, FileNotFoundError):
+        print("Install failed")
 
 def uninstall(*args, **kwargs):
     if os.path.exists(complete):
