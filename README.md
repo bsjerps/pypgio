@@ -10,10 +10,11 @@ It is based on, and uses some code from PGIO by Kevin Closson, see [PGIO](https:
 # Prerequisites
 
 * Linux shell account (can be different system than the database server)
+* ```$HOME/bin``` directory that is in ```$PATH```
 * PostgreSQL database (any recent supported version)
 * User on the database with full access rights on the database
 * Python 3.6 or higher
-* _python3_ must be in the environment
+* ```python3``` must be in the environment
 * Internet access to install Python PIP packages
 
 # Installing
@@ -35,17 +36,18 @@ curl https://raw.githubusercontent.com/bsjerps/pypgio/master/scripts/download | 
 
 # Check if pgio is installed
 ls -al ~/bin/pgio
--rwxr-xr-x 1 bart bart 42437 Nov 27 14:24 /home/bart/bin/pgio
 ```
 
 ## From GIT repo
+
+Note that _PyPGIO_ is designed to run as a ZipApp package. Running directly from the git repository is not recommended. Instead, create the package from the repo:
+
 ```
 # Clone the repository
 git clone https://github.com/bsjerps/pypgio.git
 cd pypgio
 scripts/mkapp
 ls -al ~/bin/pgio
-
 ```
 
 # Create database
@@ -54,14 +56,15 @@ See [create_db.sql](https://github.com/bsjerps/pypgio/blob/devel/scripts/create_
 # Setup the environment
 
 ```
-# Run pgio - it will create an installer script named install_pgio in $HOME/bin
+# Run pgio
 pgio
 
 # Run installer
-bash install_pgio
+pgio --install
 
 # Logout and login again - bash completion should now work
-# Run pgio -h
+
+# Show help summary: Run pgio -h
 pgio -h
 
 # Show default configuration settings
@@ -83,7 +86,7 @@ pgio
 Assuming we have a database named _pgio_ with a user _pgio_ and password _pgio_.
 By default, pgio uses the public table with the default schema. 
 
-On RHEL, the database top directory is ```/var/lib/pgsql/16/data```
+On RHEL, the database top directory is ```/var/lib/pgsql/<version>/data```
 
 But in many cases, we want the (large) pgio tables on another filesystem. In our example we have a file system ```/pgdata``` on which we created a PostgreSQL tablespace ```bulk``` and we want our tables to be generated there.
 
@@ -94,7 +97,7 @@ pgio configure --schemas 8 --scale 256M
 # Optionally set the default tablespace
 pgio configure --tablespace bulk
 
-# Create database structure and tables, using 4 threads
+# Create database structure and tables, using 4 parallel threads
 pgio setup 4
 
 # Check the tables
@@ -123,18 +126,18 @@ pgio report -v
 
 # Deinstall
 
+Deinstallation involves the removal of all pgio related stuff in the database, and the virtual environment and shell settings in the user home directory
 
 ```
 # Delete the database structures
 pgio destroy
 
-# Simply remove the _pgio_ files from $HOME/bin:
-rm -f $HOME/bin/{pgio,complete_pgio,install_pgio}
+# Remove bash setup and virtual environment
+pgio uninstall
 
-# Remove the virtual environment
-rm -rf $HOME/pgio_venv
+# Remove pgio from $HOME/bin
+rm ~/bin/pgio
 
-# Remove the environment settings from $HOME/.bashrc
 ```
 
 
