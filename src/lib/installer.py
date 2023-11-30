@@ -69,4 +69,19 @@ def uninstall(*args, **kwargs):
                 f.write(out)
     
     if os.path.isdir(venvdir):
-        run(['/usr/bin/rm', '-r', venvdir])
+        run(['/usr/bin/rm', '-rf', venvdir])
+
+def bootstrap():
+    parser = argparse.ArgumentParser()
+    subparsers     = parser.add_subparsers(title='commands', dest='cmd')
+    parser_install = subparsers.add_parser('install',   help='(Re-)Install virtual environment', add_help=False)
+    parser_uninst  = subparsers.add_parser('uninstall', help='Remove virtual environment')
+
+    parser_install.set_defaults(func=install)
+    parser_uninst.set_defaults(func=uninstall)
+
+    args = parser.parse_args()
+    if args.cmd is not None:
+        args.func()
+    else:
+        print('Missing environment, try pgio install')

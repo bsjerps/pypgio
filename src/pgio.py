@@ -18,7 +18,7 @@ import os, argparse, logging
 from datetime import datetime
 from threading import Thread, Event
 from queue import Queue
-from lib.installer import install, uninstall
+from lib.installer import install, uninstall, bootstrap
 
 logging.basicConfig(level=logging.INFO,
     format="%(levelname)-8s: %(message)s",
@@ -28,20 +28,9 @@ try:
     from psycopg import OperationalError, DatabaseError
     from lib.pretty import Pretty
     from lib.database import Database
-    from lib.config import Config, printversion
+    from lib.config import Config, printversion, versioninfo
 except ImportError:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--install', action="store_true")
-    parser.add_argument('-u', '--uninstall', action="store_true")
-
-    args = parser.parse_args()
-    if args.install:
-        install()
-    elif args.uninstall:
-        uninstall()
-    else:
-        print('Missing environment, try pgio --install')
-
+    bootstrap()
     sys.exit()
 
 logging.basicConfig(level=logging.INFO,
@@ -169,6 +158,8 @@ def runit(args, config):
     schemas = min(config.schemas, db.schemas)
     if args.threads > schemas:
         raise ValueError(f"Cannot use more threads than schemas (unsupported)")
+
+    logging.info(f"PyPGIO {versioninfo['version']}")
 
     logging.info(f"Date:           {t_start.strftime('%Y-%m-%d %H:%M:%S')}")
     logging.info(f"Server:         {db.conn.info.host}")

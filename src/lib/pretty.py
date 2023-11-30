@@ -30,10 +30,13 @@ class Pretty():
             for r in self.data:
                 print('\t'.join([str(x) for x in r]))
         else:
-
             for i, r in enumerate(self.data):
                 if i+1 in self.breaks:
-                    self.tbl.add_row(r, divider=True)
+                    try:
+                        self.tbl.add_row(r, divider=True)
+                    except TypeError:
+                        self.tbl.add_row(r)
+                        self.tbl.add_row(['---'] * len(r))
                 else:
                     self.tbl.add_row(r)
             print(self.tbl)

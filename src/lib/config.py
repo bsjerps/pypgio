@@ -8,20 +8,23 @@ import os, json
 
 versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
+    'url': 'https://github.com/bsjerps/pypgio',
     'copyright': "Copyright 2023, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html and Apache 2.0, http://www.apache.org/licenses/LICENSE-2.0",
-    'version': "1.0.3"
+    'version': "1.0.4"
 }
 
 def printversion():
-    print (f"Author:    {versioninfo['author']}")
-    print (f"Copyright: {versioninfo['copyright']}")
-    print (f"License:   {versioninfo['license']}")
-    print (f"Version:   {versioninfo['version']}")
+    print("PyPGIO - An IO generator for PostgreSQL based on the original pgio and SLOB\n")
+    print(f"Author:    {versioninfo['author']}")
+    print(f"URL:       {versioninfo['url']}")
+    print(f"Copyright: {versioninfo['copyright']}")
+    print(f"License:   {versioninfo['license']}")
+    print(f"Version:   {versioninfo['version']}")
 
 def printdetailedversion():
-    print ("Builddate: {buildinfo['builddate']}")
-    print ("Buildhash: {buildinfo['buildhash']}")
+    print("Builddate: {buildinfo['builddate']}")
+    print("Buildhash: {buildinfo['buildhash']}")
 
 def _scale2rows(scale):
     suffix=scale[-1].lower()
