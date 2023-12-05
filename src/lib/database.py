@@ -86,7 +86,7 @@ class Database():
     def create_seed(self, rowcount):
         sql = self.getscript('pgio_seed.sql')
         with self.conn.transaction(), self.conn.cursor() as cur:
-            cur.execute('DROP TABLE IF EXISTS seed')
+            cur.execute('DROP TABLE IF EXISTS pgio_seed')
             cur.execute(sql, (rowcount,))
 
     def drop_table(self, table_name):
