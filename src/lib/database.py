@@ -13,7 +13,7 @@ from psycopg.rows import namedtuple_row
 class Database():
     def __init__(self, config, name=None):
         try:
-            self.conn = psycopg.connect(host=config.dbhost, dbname=config.dbname, user=config.dbuser, password=config.dbpass, autocommit=True)
+            self.conn = psycopg.connect(host=config.dbhost, dbname=config.dbname, user=config.dbuser, password=config.dbpass, port=config.dbport, autocommit=True)
         except AttributeError as e:
             logging.error(e)
             raise ValueError(f'Bad database configuration {e}')
