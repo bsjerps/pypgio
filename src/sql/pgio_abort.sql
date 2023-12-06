@@ -12,4 +12,4 @@ SELECT pid
 , pg_cancel_backend(pid)
 FROM pg_stat_activity
 WHERE state = 'active'
-and application_name ~ 'pgio_\d+'
+AND application_name ~ 'pgio_\d+'

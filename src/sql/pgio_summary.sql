@@ -12,15 +12,15 @@ SELECT 'Total' pid
 , loops
 , selects
 , updates
-, round(max_select,4)          "max_select"
-, round(max_update,4)          "max_update"
+, ROUND(max_select,4)          "max_select"
+, ROUND(max_update,4)          "max_update"
 , blks_selected
 , blks_updated
-, round(blks_selected/runtime) "read/s"
-, round(blks_updated/runtime)  "write/s"
+, ROUND(blks_selected/runtime) "read/s"
+, ROUND(blks_updated/runtime)  "write/s"
 FROM (
 	SELECT COUNT(*)             threads
-	, count(table_name)         tables
+	, COUNT(table_name)         tables
     , ROUND(extract(epoch FROM MAX(ts_end) - MIN(ts_start)),2) runtime
 	, MAX(work_unit)            work_unit
 	, MAX(update_unit)          update_unit
@@ -31,7 +31,7 @@ FROM (
 	, MAX(sql_update_max_tm)    max_update
 	, SUM(select_blk_touch_cnt) blks_selected
 	, SUM(update_blk_touch_cnt) blks_updated
-	, TO_CHAR(MIN(ts_start), 'HH24:MI:SS')            ts_start
-	, TO_CHAR(MAX(ts_end), 'HH24:MI:SS')              ts_end
+	, TO_CHAR(MIN(ts_start), 'HH24:MI:SS') ts_start
+	, TO_CHAR(MAX(ts_end), 'HH24:MI:SS')   ts_end
 	FROM pgio_table_stats
-)
+) t

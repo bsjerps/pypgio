@@ -12,10 +12,10 @@ SELECT pid
 , loops
 , selects
 , updates
-, round(max_select,4)              "max_select"
-, round(max_update,4)              "max_update"
-, blocks_selected                  "blks_selected"
-, blocks_updated                   "blks_updated"
+, round(max_select,4)            "max_select"
+, round(max_update,4)            "max_update"
+, blocks_selected                "blks_selected"
+, blocks_updated                 "blks_updated"
 , round(blocks_selected/runtime) "read/s"
 , round(blocks_updated/runtime)  "write/s"
 FROM (
@@ -33,4 +33,4 @@ FROM (
 	, update_blk_touch_cnt  blocks_updated
 	FROM pgio_table_stats
 	ORDER BY pid
-)
+) t
