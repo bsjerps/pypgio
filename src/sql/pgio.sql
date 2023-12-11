@@ -13,6 +13,7 @@
 -- limitations under the License.
 
 -- 2023-11-22 - [Bart Sjerps] Added IF EXISTS clause for pgio_return
+-- 2023-12-11 - [Bart Sjerps] changed BETWEEN clauses to fix incorrect block counts
 
 DROP TYPE IF EXISTS pgio_return CASCADE;
 CREATE TYPE pgio_return AS (
@@ -118,7 +119,7 @@ END IF;
 v_before := clock_timestamp();
 
 IF ( v_optype = 0 ) THEN
-	EXECUTE 'SELECT sum(scratch) FROM ' || v_mytab || ' WHERE mykey BETWEEN ' || v_mykey || ' AND ' || v_mykey + v_select_batch_size  INTO v_scratch;
+	EXECUTE 'SELECT sum(scratch) FROM ' || v_mytab || ' WHERE mykey BETWEEN ' || v_mykey || ' AND ' || v_mykey + v_select_batch_size - 1 INTO v_scratch;
 
 	v_tm_delta := cast(extract(epoch from (clock_timestamp() - v_before)) as numeric(12,8));
 
@@ -138,7 +139,7 @@ IF ( v_optype = 0 ) THEN
 	END IF;
 
 ELSE
-	EXECUTE 'UPDATE ' || v_mytab || ' SET scratch = scratch + 1 WHERE mykey BETWEEN ' || v_mykey || ' AND ' || v_mykey + v_update_batch_size;
+	EXECUTE 'UPDATE ' || v_mytab || ' SET scratch = scratch + 1 WHERE mykey BETWEEN ' || v_mykey || ' AND ' || v_mykey + v_update_batch_size - 1;
 
 	v_tm_delta := cast(extract(epoch from (clock_timestamp() - v_before)) as numeric(12,8));
 
