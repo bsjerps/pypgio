@@ -102,6 +102,7 @@ class Database():
             cur.execute(SQL('TRUNCATE TABLE {table}').format(table=table))
             cur.execute(SQL('CREATE INDEX IF NOT EXISTS {index} ON {table}(mykey)').format(table=table, index=index))
             cur.execute(SQL('INSERT INTO {table} SELECT * FROM pgio_seed').format(table=table))
+        self.conn.execute(SQL('VACUUM ANALYZE {table}').format(table=table))
 
     def destroy(self):
         with self.conn.transaction(), self.conn.cursor() as cur:
