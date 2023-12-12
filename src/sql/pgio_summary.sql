@@ -8,16 +8,19 @@
 SELECT 'Total' pid
 , tables
 , runtime
-, work_unit || ':' || update_unit  "units"
+, work_unit || ':' || update_unit
 , loops
 , selects
 , updates
-, ROUND(max_select,4)          "max_select"
-, ROUND(max_update,4)          "max_update"
-, blks_selected
-, blks_updated
-, ROUND(blks_selected/runtime) "read/s"
-, ROUND(blks_updated/runtime)  "write/s"
+, ROUND(100*updates::numeric/loops,2) "pct"
+, ROUND(max_select,4)                 "max_select"
+, ROUND(max_update,4)                 "max_update"
+, selected
+, updated
+, ROUND(selected/runtime)             "read/s"
+, ROUND(updated/runtime)              "write/s"
+, ROUND((selected+updated)/runtime)   "iops"
+, ROUND(100*updated/NULLIF(selected+updated,0),2) "writepct"
 FROM (
 	SELECT COUNT(*)             threads
 	, COUNT(table_name)         tables
@@ -29,8 +32,8 @@ FROM (
 	, SUM(sql_updates)          updates
 	, MAX(sql_select_max_tm)    max_select
 	, MAX(sql_update_max_tm)    max_update
-	, SUM(select_blk_touch_cnt) blks_selected
-	, SUM(update_blk_touch_cnt) blks_updated
+	, SUM(select_blk_touch_cnt) selected
+	, SUM(update_blk_touch_cnt) updated
 	, TO_CHAR(MIN(ts_start), 'HH24:MI:SS') ts_start
 	, TO_CHAR(MAX(ts_end), 'HH24:MI:SS')   ts_end
 	FROM pgio_table_stats

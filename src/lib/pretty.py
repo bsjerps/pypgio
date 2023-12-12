@@ -12,7 +12,6 @@ class Pretty():
         self.data = []
         self.breaks = []
         self.tbl = PrettyTable()
-        self.tbl.align = "r"
         self.tbl.field_names = header
         if title:
             self.tbl.title = title
@@ -39,5 +38,6 @@ class Pretty():
                         self.tbl.add_row(['---'] * len(r))
                 else:
                     self.tbl.add_row(r)
+            self.tbl.align = "r"
             print(self.tbl)
         print()
