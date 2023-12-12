@@ -59,10 +59,12 @@ See [create_db.sql](https://github.com/bsjerps/pypgio/blob/devel/scripts/create_
 # Run pgio
 pgio
 
-# Run installer
-pgio --install
+# Run installer (this sets up the virtual environment and bash completion)
+pgio install
 
 # Logout and login again - bash completion should now work
+# Or source the completions
+source ~/.bash_completion
 
 # Show help summary: Run pgio -h
 pgio -h
@@ -74,7 +76,7 @@ pgio configure
 pgio configure -h
 
 # Change the database host
-pgio configure --dbhost gp01.lan
+pgio configure --dbhost pgserver.lan
 
 # Test connection
 pgio
@@ -102,7 +104,6 @@ pgio setup 4
 
 # Check the tables
 pgio list
-
 ```
 
 Now we can run _pgio_:
