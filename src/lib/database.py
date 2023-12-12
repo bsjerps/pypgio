@@ -26,7 +26,7 @@ class Database():
         return get_data('sql', name).decode()
 
     def schema(self):
-        for file in ('pgio_schema.sql', 'pgio.sql', 'pgio_get_rand.sql'):
+        for file in ('pgio_schema.sql', 'pgio.sql', 'pgio_get_rand.sql', 'pgio_fts.sql'):
             data = self.getscript(file)
             sql = SQL(data).format(table=Identifier('seed'))
             with self.conn.transaction(), self.conn.cursor() as cur:
@@ -106,16 +106,16 @@ class Database():
 
     def destroy(self):
         with self.conn.transaction(), self.conn.cursor() as cur:
-            logging.info('Dropping master data')
-            sql = self.getscript('pgio_destroy.sql')
-            cur.execute(sql)
-
             cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name ~ 'pgio\d+' ORDER BY 1")
             tables = [x[0] for x in cur.fetchall()]
             for table_name in tables:
                 logging.info(f'Dropping {table_name}')
                 table = Identifier(table_name)
                 cur.execute(SQL('DROP TABLE IF EXISTS {table}').format(table=table))
+
+            logging.info('Dropping master data')
+            sql = self.getscript('pgio_destroy.sql')
+            cur.execute(sql)
 
     def run_task(self, table_name, pct, run_tm, scale, work_unit, update_work_unit, ts):
         sql = SQL("SELECT * FROM mypgio({table_name}, {pct}, {run_tm}, {scale}, {work_unit}, {update_work_unit})").format(
@@ -133,8 +133,19 @@ class Database():
         with self.conn.transaction(), self.conn.cursor() as cur:
             sql = SQL(
                 "INSERT INTO pgio_table_stats (mypid, loop_iterations, sql_selects, sql_updates, sql_select_max_tm, sql_update_max_tm, select_blk_touch_cnt, update_blk_touch_cnt, table_name, work_unit, update_unit, ts_start)\n"
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)").format(
-                    table_name = Literal(table_name
-                )
-            )
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)").format(table_name = Literal(table_name))
+
             cur.execute(sql, data + (table_name,work_unit, update_work_unit, ts))
+
+    def run_fts(self, table_name, run_tm, ts):
+        sql = SQL("SELECT * FROM pgio_fts({table_name}, {run_tm})").format(table_name = Literal(table_name), run_tm=Literal(run_tm))
+        with self.conn.cursor() as cur:
+            cur.execute(sql)
+            data = cur.fetchone()
+
+        with self.conn.transaction(), self.conn.cursor() as cur:
+            sql = SQL(
+                "INSERT INTO pgio_table_stats (mypid, loop_iterations, sql_selects, sql_updates, sql_select_max_tm, sql_update_max_tm, select_blk_touch_cnt, update_blk_touch_cnt, table_name, work_unit, update_unit, ts_start)\n"
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)").format(table_name = Literal(table_name))
+
+            cur.execute(sql, data + (table_name,0, 0, ts))

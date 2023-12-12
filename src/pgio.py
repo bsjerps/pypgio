@@ -83,7 +83,11 @@ def worker_thread(schema_num, args, config, syncwait):
             logging.error("Timeout")
             sys.exit(1)
 
-        db.run_task(table_name, config.update_pct, args.runtime, config.scale, config.work_unit, config.update_unit, datetime.now())
+        if args.fts:
+            db.run_fts(table_name, args.runtime, datetime.now())
+
+        else:
+            db.run_task(table_name, config.update_pct, args.runtime, config.scale, config.work_unit, config.update_unit, datetime.now())
 
     except DatabaseError as e:
         logging.error(e)
@@ -239,6 +243,7 @@ def main():
     parser_report.add_argument('-v', '--verbose', help="Extra details", action="store_true")
 
     parser_run.add_argument('-v', '--verbose', help="Extra details", action="store_true")
+    parser_run.add_argument('-f', '--fts', help="Full Table Scans", action="store_true")
     parser_run.add_argument('runtime', metavar='<runtime>', type=int, help="Runtime in seconds")
     parser_run.add_argument('threads', metavar="<threads>", type=int, help="Number of workers per schema")
 

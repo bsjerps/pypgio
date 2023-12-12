@@ -13,9 +13,10 @@ SELECT to_char(last_stamp, 'HH24:MI:SS') timestamp
 , fetched
 , updated
 , 100*reads/returned        "read %"
-, ROUND(reads/runtime)      "reads/s"
 , ROUND(fetched/runtime)    "fetch/s"
+, ROUND(reads/runtime)      "reads/s"
 , ROUND(updated/runtime)    "writes/s"
+, ROUND((reads+updated)*8/1024/runtime) "MiB/s"
 FROM (
 	SELECT ts
 	, max(ts) OVER () last_stamp
