@@ -11,8 +11,6 @@ export gitdir=$(git rev-parse --show-toplevel) || exit 10
 export packager=$(git config --global user.name)
 export email=$(git config --global user.email | sed 's/@/ AT /')
 
-die() { echo "$(basename $0) error: $@" >&2 ; exit 20 ; }
-
 cat << EOF > "$gitdir"/src/buildinfo.py
 buildinfo = {
     'builddate': '$(date +"%Y-%m-%d %H:%M")',

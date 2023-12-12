@@ -29,8 +29,8 @@ try:
     from lib.pretty import Pretty
     from lib.database import Database
     from lib.config import Config, printversion, versioninfo
-except ImportError:
-    bootstrap()
+except ImportError as e:
+    bootstrap(e)
     sys.exit()
 
 logging.basicConfig(level=logging.INFO,
@@ -147,7 +147,7 @@ def report(args, config):
     t.print(args)
 
 def runit(args, config):
-    db = Database(config)
+    db = Database(config, name=f'pgio_runner')
     db.execute('TRUNCATE TABLE pgio_table_stats')
     db.execute('TRUNCATE TABLE pgio_dbstats')
 
@@ -171,8 +171,7 @@ def runit(args, config):
     logging.info(f"Work_unit:      {config.work_unit}")
     logging.info(f"Update_unit:    {config.update_unit}")
 
-    logging.info(f"Testing {args.threads} thread(s) accessing {config.size} ({config.scale} blocks) of each schema.")
-    logging.info(f"Launching sessions. {config.schemas} schema(s) will be accessed by {args.threads} thread(s) total")
+    logging.info(f"Testing {args.threads} thread(s) accessing {config.size} ({config.scale} blocks) each.")
 
     threads = []
     syncwait = Event()

@@ -5,38 +5,38 @@ Copyright (c) 2023 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
-import os, re, argparse
+import os, sys, re, argparse
 from subprocess import run, PIPE, CalledProcessError
 from pkgutil import get_data
 
-homedir     = os.path.expanduser('~')
-venvdir     = os.path.join(homedir, 'pgio_venv')
-completions = os.path.join(homedir, '.bash_completion')
-completedir = os.path.join(homedir, '.local/share/bash-completion/completions')
-complete    = os.path.join(completedir, 'complete_pgio')
+homedir         = os.path.expanduser('~')
+venvdir         = os.path.join(homedir, 'pgio_venv')
+bash_completion = os.path.join(homedir, '.bash_completion')
+completions     = os.path.join(homedir, '.local/share/bash-completion/completions')
+complete_pgio   = os.path.join(completions, 'complete_pgio')
+configfile      = os.path.join(homedir, '.config/pgio', 'pgio.json')
 
 required    = ('prettytable', 'psycopg', 'psycopg-binary', 'wcwidth')
 
-def makefiles():
-    os.makedirs(completedir, exist_ok=True)
-    for name in ('.bash_completion', '.bash_aliases'):
-        path = os.path.join(homedir, name)
-        if not os.path.isfile(path):
-            with open(path, 'w') as f:
-                pass
+def make_completions():
+    os.makedirs(completions, exist_ok=True)
 
-    with open(complete, 'wb') as f:
+    if not os.path.isfile(bash_completion):
+        with open(bash_completion, 'w') as f:
+            pass
+
+    with open(bash_completion) as f:
+        data = f.read()
+    if not re.search(r'completions/*', data):
+        with open(bash_completion, 'a') as f:
+            f.write("for f in $HOME/.local/share/bash-completion/completions/* ; do source $f ; done\n")
+
+    with open(complete_pgio, 'wb') as f:
         data = get_data('lib', 'complete_pgio')
-        print(f"Saving {complete}")
+        print(f"Saving {complete_pgio}")
         f.write(data)
 
-    with open(completions) as f:
-        data = f.read()
-    if not re.search(r'pgio', data):
-        with open(completions, 'a') as f:
-            f.write(f"source {complete}\n")
-
-def virtualenv():
+def make_venv():
     pip = os.path.join(venvdir, 'bin', 'pip')
 
     # Create venv
@@ -62,29 +62,30 @@ def virtualenv():
 
 def install(*args, **kwargs):
     try:
-        makefiles()
-        virtualenv()
-        print("Now logout and login again to activate pgio bash completion")
+        make_completions()
+        make_venv()
+        print("\nNow logout and login again to activate pgio bash completion\n")
+        print("Or run:\n\nsource ~/.bash_completion\n")
     except (CalledProcessError, FileNotFoundError):
         print("Install failed")
 
 def uninstall(*args, **kwargs):
-    if os.path.exists(complete):
-        print(f"Deleting {complete}")
-        os.unlink(complete)
+    if os.path.exists(complete_pgio):
+        print(f"Deleting {complete_pgio}")
+        os.unlink(complete_pgio)
 
-    if os.path.exists(completions):
-        with open(completions) as f:
-            data = f.read()
-        if re.search(r'pgio', data):
-            out = re.sub('^source .*complete_pgio\n','', data, re.M)
-            with open(completions, 'w') as f:
-                f.write(out)
-    
+    if os.path.exists(configfile):
+        print(f"Deleting {configfile}")
+        os.unlink(configfile)
+        os.rmdir(os.path.dirname(configfile))
+
     if os.path.isdir(venvdir):
+        print(f"Deleting virtual environment {venvdir}")
         run(['/usr/bin/rm', '-rf', venvdir])
 
-def bootstrap():
+    sys.exit()
+
+def bootstrap(err):
     parser = argparse.ArgumentParser()
     subparsers     = parser.add_subparsers(title='commands', dest='cmd')
     parser_install = subparsers.add_parser('install',   help='(Re-)Install virtual environment', add_help=False)
@@ -97,4 +98,4 @@ def bootstrap():
     if args.cmd is not None:
         args.func()
     else:
-        print('Missing environment, try pgio install')
+        print(f'Import failed ({err}), try pgio install')
