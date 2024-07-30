@@ -26,5 +26,5 @@ EOF
 python3 -m zipapp \
 	--python "/usr/bin/env python3" \
 	--main pgio:main \
-	--output "$HOME/bin/pgio" \
+	--output "$HOME/bin/pypgio" \
     $gitdir/src

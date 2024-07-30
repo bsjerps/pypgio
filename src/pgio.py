@@ -1,41 +1,36 @@
 #!/usr/bin/env python3
 """
 pgio.py - Main file for PyPGIO - An IO generator for PostgreSQL based on the original pgio and SLOB
-Copyright (c) 2023 - Bart Sjerps <bart@dirty-cache.com>
+Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
 Based on the original PGIO by Kevin Closson - see https://github.com/therealkevinc/pgio
 License: GPLv3+
 """
 
-import os, sys
+import os, sys, argparse, logging
 sys.dont_write_bytecode = True
-
-sys.path.append(os.path.join(os.path.expanduser('~'), 
-        'pgio_venv/lib',
-        f'python3.{sys.version_info.minor}',
-        'site-packages'))
-
-import os, argparse, logging
-from datetime import datetime
-from threading import Thread, Event
-from queue import Queue
-from lib.installer import install, uninstall, bootstrap
 
 logging.basicConfig(level=logging.INFO,
     format="%(levelname)-8s: %(message)s",
     datefmt='%Y-%m-%d %H:%M:%S')
 
 try:
+    from datetime import datetime
+    from threading import Thread, Event
+    from queue import Queue
     from psycopg import OperationalError, DatabaseError
     from lib.pretty import Pretty
     from lib.database import Database
     from lib.config import Config, printversion, versioninfo
 except ImportError as e:
-    bootstrap(e)
-    sys.exit()
-
-logging.basicConfig(level=logging.INFO,
-    format="%(levelname)-8s: %(message)s",
-    datefmt='%Y-%m-%d %H:%M:%S')
+    logging.error(e)
+    modpath = os.path.dirname(__file__)
+    if not any([os.path.isfile(os.path.join(p,'pgio')) for p in os.environ.get('PATH').split(os.pathsep)]):
+        logging.info(f'Try running python3 {modpath}/install')
+    elif sys.prefix == sys.base_prefix:
+        logging.info(f'Not running from virtual environment. Try running pgio')
+    else:
+        logging.info(f'Try reinstalling pgio: python3 {modpath}/install')
+    sys.exit(10)
 
 def destroy(args, config):
     """Delete all pgio related stuff from the database"""
@@ -205,8 +200,6 @@ def main():
     parser.add_argument('-V', '--version', help="Show version and copyright", action="store_true")
 
     subparsers      = parser.add_subparsers(title='commands', dest='cmd')
-    parser_install  = subparsers.add_parser('install',   help='(Re-)Install virtual environment', add_help=False)
-    parser_uninst   = subparsers.add_parser('uninstall', help='Remove virtual environment')
     parser_destroy  = subparsers.add_parser('destroy',   help='Destroy PGIO data/config')
     parser_config   = subparsers.add_parser('configure', formatter_class=formatter, help='Configure settings')
     parser_setup    = subparsers.add_parser('setup',     help='Setup tables')
@@ -215,8 +208,6 @@ def main():
     parser_report   = subparsers.add_parser('report',    help='Report')
     parser_abort    = subparsers.add_parser('abort',     help='Cancel running jobs')
 
-    parser_install.set_defaults(func=install)
-    parser_uninst.set_defaults(func=uninstall)
     parser_destroy.set_defaults(func=destroy)
     parser_config.set_defaults(func=configure)
     parser_setup.set_defaults(func=setup)

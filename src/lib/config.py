@@ -9,9 +9,9 @@ import os, json
 versioninfo = {
     'author': "Bart Sjerps <info@dirty-cache.com>",
     'url': 'https://github.com/bsjerps/pypgio',
-    'copyright': "Copyright 2023, Bart Sjerps",
+    'copyright': "Copyright 2024, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html and Apache 2.0, http://www.apache.org/licenses/LICENSE-2.0",
-    'version': "1.0.9"
+    'version': "1.1.0"
 }
 
 def printversion():

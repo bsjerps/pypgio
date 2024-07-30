@@ -1,0 +1,26 @@
+#!/bin/bash
+#============================================================================
+# Title       : pgio
+# Description : wrapper for pypgio
+# Author      : Bart Sjerps <bart@dirty-cache.com>
+# License     : GPLv3+
+# ---------------------------------------------------------------------------
+# Calls pypgio from the Python virtual environment
+# This eliminates the need for the user to activate the environment first
+# ---------------------------------------------------------------------------
+
+venv=$HOME/pgio_venv
+
+usage() {
+  cat <<- EOF
+	No virtual environment on $venv
+	
+	Run python3 pypgio/install first
+	
+	EOF
+}
+
+test -d $venv || { usage ; exit 10 ; }
+
+source $venv/bin/activate
+pypgio "$@"
