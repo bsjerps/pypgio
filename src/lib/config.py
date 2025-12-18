@@ -11,7 +11,7 @@ versioninfo = {
     'url': 'https://github.com/bsjerps/pypgio',
     'copyright': "Copyright 2024, Bart Sjerps",
     'license': "GPLv3+, https://www.gnu.org/licenses/gpl-3.0.html and Apache 2.0, http://www.apache.org/licenses/LICENSE-2.0",
-    'version': "1.1.0"
+    'version': "1.2.0"
 }
 
 def printversion():
@@ -100,7 +100,7 @@ class Config():
     def configure(self, args):
         if args.defaults:
             self.reset()
-   
+
         for parameter in self.parameters:
             if not parameter in args:
                 continue
@@ -140,4 +140,3 @@ class Config():
             if k == 'rows':
                 sz = _rows2scale(v)
                 print(f'{"schema_size":20} {sz}')
-            

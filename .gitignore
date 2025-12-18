@@ -42,3 +42,9 @@ buildinfo.py
 
 # Testing
 test*.py
+
+# Editors
+.vscode
+
+# config
+uv.lock

@@ -10,7 +10,7 @@ from pkgutil import get_data
 from subprocess import run, PIPE, CalledProcessError
 
 homedir         = os.path.expanduser('~')
-venvdir         = os.path.join(homedir, 'pgio_venv')
+venvdir         = os.path.join(homedir, '.virtualenvs/pgio_venv')
 pgiobin         = os.path.join(homedir, 'bin', 'pgio')
 completions     = os.path.join(homedir, '.local/share/bash-completion/completions')
 complete_pgio   = os.path.join(completions, 'complete_pgio')
@@ -34,7 +34,7 @@ def removefile(path):
     print(f"Deleting {path}")
     try:
         os.unlink(path)
-    except OSError as e:
+    except OSError:
         pass
 
 def make_venv():
@@ -42,7 +42,7 @@ def make_venv():
         if not os.path.isdir(venvdir):
             print(f"Creating virtualenv on {venvdir}")
             r = run(['python3', '-m', 'venv', venvdir], check=True)
-        
+
         r = run([pip, 'freeze'], stdout=PIPE, encoding='utf-8', check=True)
         installed = re.findall('(\S+)==.*', r.stdout)
         for pkg in required:
@@ -50,14 +50,14 @@ def make_venv():
                 print(f'Installing {pkg}')
                 run([pip, 'install', pkg], check=True)
         print(f'Virtual environment setup finished on {venvdir}\n')
-        run([pip, 'list'])
+        run([pip, 'list'], check=True)
     except CalledProcessError:
-        run(['/usr/bin/rm', '-rf', venvdir])
-        print(f'Creating virtual environment failed')
+        run(['/usr/bin/rm', '-rf', venvdir], check=True)
+        print('Creating virtual environment failed')
 
 def remove_venv():
     print(f"Removing virtualenv on {venvdir}")
-    run(['/usr/bin/rm', '-rf', venvdir])
+    run(['/usr/bin/rm', '-rf', venvdir], check=True)
 
 def install():
     os.makedirs(os.path.join(homedir, 'bin'), exist_ok=True)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 pgio.py - Main file for PyPGIO - An IO generator for PostgreSQL based on the original pgio and SLOB
 Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
@@ -7,6 +6,11 @@ License: GPLv3+
 """
 
 import os, sys, argparse, logging
+from datetime import datetime
+from threading import Thread, Event
+from queue import Queue
+from pkgutil import get_data
+
 sys.dont_write_bytecode = True
 
 logging.basicConfig(level=logging.INFO,
@@ -14,23 +18,37 @@ logging.basicConfig(level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
 try:
-    from datetime import datetime
-    from threading import Thread, Event
-    from queue import Queue
     from psycopg import OperationalError, DatabaseError
     from lib.pretty import Pretty
     from lib.database import Database
     from lib.config import Config, printversion, versioninfo
+
 except ImportError as e:
-    logging.error(e)
+    if sys.stdout.isatty():
+        logging.error(e)
+
     modpath = os.path.dirname(__file__)
-    if not any([os.path.isfile(os.path.join(p,'pgio')) for p in os.environ.get('PATH').split(os.pathsep)]):
-        logging.info(f'Try running python3 {modpath}/install')
-    elif sys.prefix == sys.base_prefix:
-        logging.info(f'Not running from virtual environment. Try running pgio')
-    else:
-        logging.info(f'Try reinstalling pgio: python3 {modpath}/install')
+
+    if sys.prefix == sys.base_prefix:
+        if not os.path.exists(os.path.join(os.path.expanduser('~'),'.virtualenvs', 'pgio')):
+            print('# Install pgio virtual environment:')
+            print('python3 -m venv $HOME/.virtualenvs/pgio')
+            print('$HOME/.virtualenvs/pgio/bin/pip install psycopg prettytable')
+
+        else:
+            if sys.stdout.isatty():
+                print('# Not running from virtual environment. run:')
+                print('source <(pypgio)')
+            else:
+                print('source $HOME/.virtualenvs/pgio/bin/activate')
+
+
     sys.exit(10)
+
+def complete(args, config):
+    """Dump the bash_completions on stdout"""
+    txt = get_data('install', 'complete_pgio')
+    print(txt.decode())
 
 def destroy(args, config):
     """Delete all pgio related stuff from the database"""
@@ -62,12 +80,12 @@ def create_thread(n, args, config, queue):
             if queue.empty():
                 break
             table_name = queue.get(timeout=10)
-            logging.info(f"Worker {n} - Creating table {table_name}")
+            logging.info("Worker %s - Creating table %s", n, table_name)
             db.create_table(table_name)
 
     except DatabaseError as e:
         logging.error(e)
-    
+
 def worker_thread(schema_num, args, config, syncwait):
     """Thread for running one task against one tabletable"""
     try:
@@ -94,16 +112,16 @@ def setup(args, config):
         db.default_tablespace(config.tablespace)
 
     # Drop extra tables
-    logging.info(f'Purging excess tables...')
+    logging.info('Purging excess tables...')
     for t in db.script('pgio_purgelist.sql', (config.schemas,)):
         db.drop_table(t[0])
 
-    logging.info(f'Creating seed table with {config.scale} rows')
+    logging.info('Creating seed table with %s rows', config.scale)
     t_start = datetime.now()
     db.create_seed(config.scale)
     t_end   = datetime.now()
     runtime = (t_end - t_start).total_seconds()
-    logging.info(f'Seed table created in {round(runtime,2)} seconds')
+    logging.info('Seed table created in %s seconds', round(runtime,2))
 
     # Queue with table names for distributing tasks to the create threads
     queue = Queue()
@@ -115,18 +133,18 @@ def setup(args, config):
     threads = []
     t_start = datetime.now()
     for j in range(args.threads):
-        proc = Thread(target=create_thread, name=f'creator', args=(j, args, config, queue))
+        proc = Thread(target=create_thread, name='creator', args=(j, args, config, queue))
         proc.start()
         threads.append(proc)
 
-    logging.info(f"Started {len(threads)} threads...")
+    logging.info("Started %s threads...", len(threads))
 
     # Wait for all threads to finish
     for thread in threads:
         thread.join()
     t_end   = datetime.now()
     runtime = (t_end - t_start).total_seconds()
-    logging.info(f'Data tables created in {round(runtime,2)} seconds')
+    logging.info('Data tables created in %s seconds', round(runtime, 2))
 
 def report(args, config):
     db = Database(config)
@@ -146,7 +164,7 @@ def report(args, config):
     t.print(args)
 
 def runit(args, config):
-    db = Database(config, name=f'pgio_runner')
+    db = Database(config, name='pgio_runner')
     db.execute('TRUNCATE TABLE pgio_table_stats')
     db.execute('TRUNCATE TABLE pgio_dbstats')
 
@@ -156,21 +174,21 @@ def runit(args, config):
     # Do not use more schemas than available
     schemas = min(config.schemas, db.schemas)
     if args.threads > schemas:
-        raise ValueError(f"Cannot use more threads than schemas (unsupported)")
+        raise ValueError("Cannot use more threads than schemas (unsupported)")
 
-    logging.info(f"PyPGIO {versioninfo['version']}")
+    logging.info("PyPGIO %s", versioninfo['version'])
 
-    logging.info(f"Date:           {t_start.strftime('%Y-%m-%d %H:%M:%S')}")
-    logging.info(f"Server:         {db.conn.info.host}")
-    logging.info(f"Database:       {db.conn.info.dbname}")
-    logging.info(f"Shared Buffers: {buffers.size_mb} (MiB)")
-    logging.info(f"Runtime:        {args.runtime}")
-    logging.info(f"Workers:        {args.threads}")
-    logging.info(f"Update %:       {config.update_pct}")
-    logging.info(f"Work_unit:      {config.work_unit}")
-    logging.info(f"Update_unit:    {config.update_unit}")
+    logging.info("Date:           %s", t_start.strftime('%Y-%m-%d %H:%M:%S'))
+    logging.info("Server:         %s", db.conn.info.host)
+    logging.info("Database:       %s", db.conn.info.dbname)
+    logging.info("Shared Buffers: %s (MiB)", buffers.size_mb)
+    logging.info("Runtime:        %s", args.runtime)
+    logging.info("Workers:        %s", args.threads)
+    logging.info("Update %%:       %s", config.update_pct)
+    logging.info("Work_unit:      %s", config.work_unit)
+    logging.info("Update_unit:    %s", config.update_unit)
 
-    logging.info(f"Testing {args.threads} thread(s) accessing {config.size} ({config.scale} blocks) each.")
+    logging.info("Testing %s thread(s) accessing %s (%s blocks) each.", args.threads, config.size, config.scale)
 
     threads = []
     syncwait = Event()
@@ -183,7 +201,7 @@ def runit(args, config):
 
     db.update_stats()
     syncwait.set()
-    logging.info(f"Started {len(threads)} threads...")
+    logging.info("Started %s threads...", len(threads))
     for thread in threads:
         thread.join()
     db.update_stats()
@@ -207,6 +225,7 @@ def main():
     parser_run      = subparsers.add_parser('run',       help='run benchmark')
     parser_report   = subparsers.add_parser('report',    help='Report')
     parser_abort    = subparsers.add_parser('abort',     help='Cancel running jobs')
+    parser_complete = subparsers.add_parser('complete',  help='Dump bash completion file')
 
     parser_destroy.set_defaults(func=destroy)
     parser_config.set_defaults(func=configure)
@@ -215,6 +234,7 @@ def main():
     parser_run.set_defaults(func=runit)
     parser_report.set_defaults(func=report)
     parser_abort.set_defaults(func=abort)
+    parser_complete.set_defaults(func=complete)
 
     parser_config.set_defaults(func=configure)
     parser_config.add_argument('--defaults', action='store_true',     help='Default settings')
@@ -260,7 +280,7 @@ def main():
         if args.debug:
             logging.exception(e)
     except DatabaseError as e:
-        logging.error(f"Database error: {e}")
+        logging.error("Database error: %s", e)
         if args.debug:
             logging.exception(e)
     except ValueError as e:

@@ -9,13 +9,15 @@
 # This eliminates the need for the user to activate the environment first
 # ---------------------------------------------------------------------------
 
-venv=$HOME/pgio_venv
+venv=$HOME/.virtualenvs/pgio_venv
 
 usage() {
+    echo "$0"
   cat <<- EOF
 	No virtual environment on $venv
+    $0
 	
-	Run python3 pypgio/install first
+	Run python3 $0/install first
 	
 	EOF
 }

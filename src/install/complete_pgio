@@ -9,13 +9,13 @@
 # you cannot run it directly
 # ---------------------------------------------------------------------------
     
-_pgio() {
+_pypgio() {
   local cur prev opts cmd configure
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   prev="${COMP_WORDS[COMP_CWORD-1]}"
   cmd="${COMP_WORDS[1]}"
-  opts="destroy configure setup list run report abort"
+  opts="destroy configure setup list run report abort complete"
   configure="--defaults --dbhost --dbname --dbuser --dbpass --dbport --update_pct --scale --schemas --work_unit --update_unit --tablespace"
   if (( $COMP_CWORD == 1 )); then
     COMPREPLY=($(compgen -W "-h --version --tabs -nohead --debug $opts" -- ${cur}))
@@ -32,4 +32,10 @@ _pgio() {
   fi
 }
 
-complete -o nosort -F _pgio pgio
+complete -o nosort -F _pypgio pypgio
+
+# Permanent:
+# pypgio complete > $HOME/.local/share/bash-completion/completions
+# Activate completions (on bash shell):
+# source <(pypgio complete)
+

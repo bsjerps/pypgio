@@ -4,9 +4,10 @@ Copyright (c) 2024 - Bart Sjerps <bart@dirty-cache.com>
 License: GPLv3+
 """
 
-import psycopg, logging
+import logging
 from pkgutil import get_data
 
+import psycopg
 from psycopg.sql import SQL, Identifier, Literal
 from psycopg.rows import namedtuple_row
 
@@ -16,9 +17,9 @@ class Database():
             self.conn = psycopg.connect(host=config.dbhost, dbname=config.dbname, user=config.dbuser, password=config.dbpass, port=config.dbport, autocommit=True)
         except AttributeError as e:
             logging.error(e)
-            raise ValueError(f'Bad database configuration {e}')
+            raise ValueError(f'Bad database configuration {e}') from e
         except psycopg.OperationalError as e:
-            raise ValueError(f'Connecting to database failed: {e}')
+            raise ValueError(f'Connecting to database failed: {e}') from e
         if name:
             self.conn.execute(SQL("SET application_name TO {}").format(name))
 
@@ -40,9 +41,9 @@ class Database():
             cur.execute(sql, *args)
             return cur.fetchone()
 
-    def fetchall(self, sql, parameters=[]):
+    def fetchall(self, sql, *args, **kwargs):
         with self.conn.cursor(row_factory=namedtuple_row) as cur:
-            cur.execute(sql, parameters)
+            cur.execute(sql, *args, **kwargs)
             return cur.fetchall()
 
     def script(self, name, *args):
@@ -80,7 +81,7 @@ class Database():
 
     @property
     def schemas(self):
-        data = self.fetchone("SELECT count(*) n FROM information_schema.tables WHERE table_schema = 'public' AND table_name ~ 'pgio\d+' ")
+        data = self.fetchone("SELECT count(*) n FROM information_schema.tables WHERE table_schema = 'public' AND table_name ~ 'pgio\\d+' ")
         return data.n
 
     def create_seed(self, rowcount):
@@ -106,10 +107,10 @@ class Database():
 
     def destroy(self):
         with self.conn.transaction(), self.conn.cursor() as cur:
-            cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name ~ 'pgio\d+' ORDER BY 1")
+            cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name ~ 'pgio\\d+' ORDER BY 1")
             tables = [x[0] for x in cur.fetchall()]
             for table_name in tables:
-                logging.info(f'Dropping {table_name}')
+                logging.info('Dropping %s', table_name)
                 table = Identifier(table_name)
                 cur.execute(SQL('DROP TABLE IF EXISTS {table}').format(table=table))
 
